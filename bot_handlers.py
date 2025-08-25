@@ -1,3 +1,16 @@
+import os
+import logging
+from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram.ext import ContextTypes
+
+# Import functions from other modules
+from config import ADMIN_ID, MAX_CHUNK_SIZE
+from utils import extract_text, split_text_into_chunks, analyze_title
+from ai_service import correct_and_classify_text
+from user_manager import load_user_data, track_user
+
+logger = logging.getLogger(__name__)
+
 async def unknown_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Maaf, saya tidak mengerti. Silakan gunakan /start untuk memilih mode.")
 import os
