@@ -67,7 +67,7 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         # UPDATED FILE DOWNLOAD METHOD
         file_data = await context.bot.get_file(file.file_id)
-        await file_data.download_to_path(file_path)
+        await file_data.download_to_drive(file_path)
 
         text, error_message = extract_text(file_path)
         if error_message or not text or not text.strip():
@@ -75,7 +75,7 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         text_chunks = split_text_into_chunks(text, MAX_CHUNK_SIZE)
-        
+
         # EFFICIENT STRING HANDLING
         corrected_chunks = []
         final_classification = "Tidak Diketahui"
@@ -84,7 +84,7 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await context.bot.edit_message_text(chat_id=update.effective_chat.id, message_id=processing_message.message_id, text=f"🧠 Menganalisis dengan AI (Mode: {mode})... Bagian {i + 1} dari {len(text_chunks)}.")
             is_first = (i == 0)
             ai_result = correct_and_classify_text(chunk, is_first_chunk=is_first, mode=mode)
-            
+
             if "error" in ai_result:
                 await context.bot.edit_message_text(chat_id=update.effective_chat.id, message_id=processing_message.message_id, text=f"❌ Error pada bagian {i+1}:\n`{ai_result['error']}`", parse_mode='Markdown')
                 return
@@ -92,7 +92,7 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
             corrected_chunks.append(ai_result.get("koreksi_teks", chunk))
             if is_first:
                 final_classification = ai_result.get("klasifikasi", "Tidak Diketahui")
-        
+
         full_corrected_text = "".join(corrected_chunks)
 
         result_message = (
@@ -109,7 +109,6 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
         with open(corrected_filename, "rb") as f:
             await context.bot.send_document(chat_id=update.effective_chat.id, document=f, filename=corrected_filename, caption="📄 Dokumen versi final yang sudah dikoreksi.")
         os.remove(corrected_filename)
-
     except Exception as e:
         logger.error(f"❌ Error saat proses handle_document: {e}")
         await update.message.reply_text(f"❌ Terjadi kesalahan tak terduga: {e}")
