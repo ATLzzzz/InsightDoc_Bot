@@ -1,3 +1,16 @@
+async def show_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text("⛔ Anda tidak memiliki izin untuk menggunakan perintah ini.")
+        return
+    users = load_user_data()
+    if not users:
+        await update.message.reply_text("Belum ada pengguna yang tercatat.")
+        return
+    message = "👥 *Daftar Pengguna Bot*\n\n"
+    for uid, data in users.items():
+        username = f"(@{data['username']})" if data['username'] != 'N/A' else ""
+        message += f"👤 *{data['first_name']}* {username}\n  - ID: `{uid}`\n  - Mode Terakhir: {data.get('last_mode', 'N/A')}\n  - Jumlah Penggunaan: {data['usage_count']} kali\n  - Terakhir Aktif: {data['last_used']}\n\n"
+    await update.message.reply_text(message, parse_mode='Markdown')
 # bot_handlers.py
 import os
 import logging
