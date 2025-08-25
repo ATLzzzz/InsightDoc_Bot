@@ -5,7 +5,7 @@ from telegram.ext import (ApplicationBuilder, CommandHandler, MessageHandler, fi
 
 # Import config and handlers
 from config import TELEGRAM_TOKEN
-from bot_handlers import (start, help_command, show_users, handle_button_press, handle_document, unknown_text)
+from bot_handlers import (start, help_command, show_users, handle_button_press, handle_document, unknown_text, check_title)
 
 # --- LOGGING SETUP ---
 logging.basicConfig(
@@ -22,6 +22,7 @@ def main():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("users", show_users))
+    application.add_handler(CommandHandler("checktitle", check_title))
     application.add_handler(CallbackQueryHandler(handle_button_press))
     application.add_handler(MessageHandler(filters.Document.ALL, handle_document))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, unknown_text))

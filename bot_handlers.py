@@ -6,7 +6,7 @@ from telegram.ext import ContextTypes
 
 # Import functions from other modules
 from config import ADMIN_ID, MAX_CHUNK_SIZE
-from utils import extract_text, split_text_into_chunks
+from utils import extract_text, split_text_into_chunks, analyze_title
 from ai_service import correct_and_classify_text
 from user_manager import load_user_data, track_user
 
@@ -53,12 +53,12 @@ async def handle_button_press(update: Update, context: ContextTypes.DEFAULT_TYPE
         await start(update, context)
 
 
+
 async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
     mode = context.user_data.get('mode')
     if not mode:
         await update.message.reply_text("Silakan pilih mode terlebih dahulu dengan mengetik /start.")
         return
-    
     track_user(update.effective_user, mode)
     file = update.message.document
     file_path = f"download_{file.file_name}"
@@ -116,23 +116,11 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if os.path.exists(file_path):
             os.remove(file_path)
 
-
-async def unknown_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Maaf, saya tidak mengerti. Silakan gunakan /start untuk memilih mode.")
-
-
-async def show_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != ADMIN_ID:
-        await update.message.reply_text("⛔ Anda tidak memiliki izin untuk menggunakan perintah ini.")
+async def check_title(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handles the /checktitle command to analyze and suggest improvements for a research title."""
+    if not context.args:
+        await update.message.reply_text("Silakan masukkan judul setelah perintah /checktitle.\n\nContoh: /checktitle Penerapan Model Deep Learning Berbasis Explainable AI (XAI) Menggunakan Grad-CAM untuk Deteksi dan Visualisasi Manipulasi Deepfake dalam Video Kampanye Politik")
         return
-    
-    users = load_user_data()
-    if not users:
-        await update.message.reply_text("Belum ada pengguna yang tercatat.")
-        return
-    
-    message = "👥 *Daftar Pengguna Bot*\n\n"
-    for uid, data in users.items():
-        username = f"(@{data['username']})" if data['username'] != 'N/A' else ""
-        message += f"👤 *{data['first_name']}* {username}\n  - ID: `{uid}`\n  - Mode Terakhir: {data.get('last_mode', 'N/A')}\n  - Jumlah Penggunaan: {data['usage_count']} kali\n  - Terakhir Aktif: {data['last_used']}\n\n"
-    await update.message.reply_text(message, parse_mode='Markdown')
+    title = " ".join(context.args)
+    feedback = analyze_title(title)
+    await update.message.reply_text(feedback, parse_mode='Markdown')
