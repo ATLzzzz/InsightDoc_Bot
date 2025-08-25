@@ -1,3 +1,5 @@
+async def unknown_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Maaf, saya tidak mengerti. Silakan gunakan /start untuk memilih mode.")
 import os
 import logging
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
