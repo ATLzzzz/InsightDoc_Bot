@@ -45,11 +45,6 @@ def split_text_into_logical_chunks(text: str, max_chunk_size: int = MAX_CHUNK_SI
         chunks.append(current_chunk.strip())
     return chunks
 
-# Fungsi lama yang diganti
-# def split_text_into_chunks(text: str, chunk_size: int) -> list:
-#     """Memecah teks menjadi beberapa bagian dengan ukuran tertentu."""
-#     return [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
-
 def generate_diff_report(original_text: str, corrected_text: str) -> str:
     """Membuat laporan perbandingan antara teks asli dan teks yang dikoreksi."""
     if original_text.strip() == corrected_text.strip():
