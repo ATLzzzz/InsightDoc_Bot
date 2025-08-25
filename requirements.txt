@@ -7,3 +7,4 @@ PyMuPDF
 python-docx
 requests
 dotenv
+pyspellchecker

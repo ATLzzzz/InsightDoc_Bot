@@ -1,9 +1,8 @@
 # main.py
 import logging
-import asyncio
 from telegram.ext import (ApplicationBuilder, CommandHandler, MessageHandler, filters, CallbackQueryHandler)
 
-# Import config and handlers
+# Import config dan handlers
 from config import TELEGRAM_TOKEN
 from bot_handlers import (start, help_command, show_users, handle_button_press, handle_document, unknown_text, check_title)
 
@@ -15,7 +14,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def main():
-    """Starts and runs the Telegram bot."""
+    """Memulai dan menjalankan bot Telegram."""
     application = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 
     # --- REGISTER HANDLERS ---

@@ -2,30 +2,27 @@
 import os
 import json
 from datetime import datetime
-from filelock import FileLock # Use the cross-platform filelock library
+from filelock import FileLock
 
 from config import USER_DATA_FILE
 
 def load_user_data():
-    """Loads user data from the JSON file."""
-    if not os.path.exists(USER_DATA_FILE):
+    """Memuat data pengguna dari file JSON."""
+    if not os.path.exists(USER_DATA_FILE) or os.path.getsize(USER_DATA_FILE) == 0:
         return {}
-    # Ensure the file is not empty before trying to load JSON
-    if os.path.getsize(USER_DATA_FILE) > 0:
-        with open(USER_DATA_FILE, 'r') as f:
-            try:
-                return json.load(f)
-            except json.JSONDecodeError:
-                return {} # Return empty dict if file is corrupt
-    return {}
+    with open(USER_DATA_FILE, 'r') as f:
+        try:
+            return json.load(f)
+        except json.JSONDecodeError:
+            return {} # Kembalikan dict kosong jika file rusak
 
 def save_user_data(data):
-    """Saves user data to the JSON file."""
+    """Menyimpan data pengguna ke file JSON."""
     with open(USER_DATA_FILE, 'w') as f:
         json.dump(data, f, indent=4)
 
 def track_user(user, mode: str):
-    """Tracks a user's activity with file locking to prevent race conditions."""
+    """Melacak aktivitas pengguna dengan file locking untuk mencegah race conditions."""
     lock_path = f"{USER_DATA_FILE}.lock"
     lock = FileLock(lock_path, timeout=10)
 
@@ -47,5 +44,4 @@ def track_user(user, mode: str):
                 'last_used': now,
                 'last_mode': mode
             }
-        
         save_user_data(users)

@@ -10,7 +10,7 @@ TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 GROQ_API_KEY = os.getenv('GROQ_API_KEY')
 
 if not TELEGRAM_TOKEN or not GROQ_API_KEY:
-    raise EnvironmentError("PENTING: Harap atur TELEGRAM_TOKEN dan GROQ_API_KEY dalam file .env atau sebagai environment variable.")
+    raise EnvironmentError("PENTING: Harap atur TELEGRAM_TOKEN dan GROQ_API_KEY dalam file .env.")
 
 # --- BOT & AI SETTINGS ---
 GROQ_MODEL = "llama3-8b-8192"
@@ -19,7 +19,7 @@ try:
 except (TypeError, ValueError):
     raise EnvironmentError("PENTING: Harap atur ADMIN_ID dalam file .env dengan nilai integer yang valid.")
 
-# DIUBAH: Mengurangi ukuran chunk untuk meningkatkan keandalan AI
+# Ukuran chunk optimal untuk dianalisis oleh AI
 MAX_CHUNK_SIZE = 7000
 
 # --- DATA & LABELS ---

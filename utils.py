@@ -5,6 +5,7 @@ import docx
 import io
 import logging
 import difflib
+from spellchecker import SpellChecker
 
 logger = logging.getLogger(__name__)
 
@@ -51,9 +52,7 @@ def generate_diff_report(original_text: str, corrected_text: str, context_lines=
     if not diff_lines:
          return "✅ Tidak ada perbedaan format baris yang terdeteksi, kemungkinan hanya spasi."
 
-    # Hanya ambil header dan 20 baris perubahan pertama agar tidak terlalu panjang
     report_lines = diff_lines[:25]
-
     for line in report_lines:
         if line.startswith(('---', '+++', '@@')):
             continue
@@ -65,9 +64,31 @@ def generate_diff_report(original_text: str, corrected_text: str, context_lines=
         
     return report
 
+def final_spell_check(text: str) -> str:
+    """Melakukan pengecekan ejaan lapisan kedua pada teks."""
+    try:
+        spell = SpellChecker(language='id')
+        words = text.split()
+        misspelled = spell.unknown(words)
+        
+        corrected_words = []
+        for word in words:
+            clean_word = word.strip(".,!?;:()[]{}")
+            if clean_word.lower() in misspelled:
+                correction = spell.correction(clean_word)
+                if correction:
+                    corrected_words.append(word.replace(clean_word, correction))
+                else:
+                    corrected_words.append(word)
+            else:
+                corrected_words.append(word)
+        return " ".join(corrected_words)
+    except Exception as e:
+        logger.error(f"Gagal melakukan final spell check: {e}")
+        return text # Kembalikan teks asli jika terjadi error
+
 def analyze_title(title: str) -> str:
     """Menganalisis judul penelitian dan memberikan saran perbaikan."""
-    # (Fungsi ini tetap sama, tidak ada perubahan)
     message = ""
     issues = []
     suggestions = []
