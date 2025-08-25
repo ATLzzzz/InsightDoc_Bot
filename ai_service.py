@@ -11,23 +11,21 @@ def correct_and_classify_text(text: str, is_first_chunk: bool, mode: str) -> dic
     """Mengirim teks ke Groq API untuk koreksi dan klasifikasi dengan instruksi super detail."""
     labels = DMT_LABELS if mode == 'DMT' else GENERAL_LABELS
     
+    # Prompt telah disederhanakan agar lebih jelas dan langsung ke inti
     system_prompt = f"""
-Anda adalah seorang **Redaktur Ahli dari Balai Pustaka** yang memiliki standar kesempurnaan tertinggi. Tugas Anda adalah memeriksa dan menyunting teks berikut dengan sangat teliti.
+Anda adalah asisten yang cerdas dan teliti. Tugas Anda adalah menyunting teks yang diberikan dengan standar PUEBI dan KBBI, serta mengklasifikasikannya jika itu adalah bagian pertama dari dokumen.
 
-**DAFTAR PERIKSA WAJIB ANDA:**
-1.  **Ejaan dan Typo (Tanpa Toleransi)**: Perbaiki SEMUA kesalahan pengetikan, sekecil apa pun. Gunakan **PUEBI dan KBBI** sebagai acuan mutlak.
-2.  **Tanda Baca**: Pastikan semua koma, titik, spasi, tanda hubung, dan tanda baca lainnya digunakan dengan benar. Perbaiki spasi ganda atau spasi yang tidak perlu (misalnya: "kata : kata" menjadi "kata: kata").
-3.  **Tata Bahasa dan Struktur Kalimat**: Susun ulang kalimat yang ambigu atau tidak efektif agar menjadi jelas, logis, dan profesional.
-4.  **Konsistensi Istilah**: Pastikan istilah teknis dan nama (contoh: "website" vs "aplikasi web") digunakan secara konsisten di seluruh teks.
-5.  **Kesalahan Kontekstual**: Identifikasi kesalahan yang hanya bisa dipahami dari konteks, seperti tahun yang tidak lengkap (contoh: `202` harus menjadi `2024` jika konteksnya adalah laporan saat ini).
-6.  **Klasifikasi (Hanya Jika Diperintahkan)**: {'Jika ini adalah bagian pertama teks, klasifikasikan isinya ke dalam salah satu kategori berikut: ' + ', '.join(labels) + '.' if is_first_chunk else 'Fokus Anda 100% pada penyuntingan, abaikan klasifikasi.'}
+**Instruksi:**
+1.  **Sunting Teks:** Perbaiki semua kesalahan ejaan, tata bahasa, dan tanda baca.
+2.  **Klasifikasi (Hanya Bagian Pertama):**
+    -   Jika ini adalah bagian pertama dokumen, klasifikasikan isinya ke dalam salah satu kategori ini: {', '.join(labels)}.
+    -   Jika bukan bagian pertama, abaikan klasifikasi dan hanya lakukan penyuntingan.
 
-**FORMAT OUTPUT (WAJIB):**
-Keluarkan HANYA satu blok kode JSON yang valid. Jangan tambahkan komentar atau penjelasan apa pun di luar JSON.
--   Untuk bagian pertama: `{{"klasifikasi": "NAMA_KATEGORI", "koreksi_teks": "..."}}`
--   Untuk bagian selanjutnya: `{{"koreksi_teks": "..."}}`
+**Format Output (WAJIB JSON):**
+-   **Untuk bagian pertama:** `{{"klasifikasi": "NAMA_KATEGORI", "koreksi_teks": "..."}}`
+-   **Untuk bagian selanjutnya:** `{{"koreksi_teks": "..."}}`
 
-Teks di dalam "koreksi_teks" harus menjadi versi final yang sudah sempurna tanpa ada satu pun kesalahan yang tersisa.
+Hanya outputkan satu blok kode JSON yang valid tanpa teks tambahan di luar blok tersebut.
 """
     
     try:
@@ -48,7 +46,13 @@ Teks di dalam "koreksi_teks" harus menjadi versi final yang sudah sempurna tanpa
             json_match = re.search(r"```json\s*(\{.*?\})\s*```", response_content, re.DOTALL)
             json_string = json_match.group(1) if json_match else response_content[response_content.find('{') : response_content.rfind('}') + 1]
             if not json_string: raise ValueError("Blok JSON tidak ditemukan.")
-            return json.loads(json_string)
+            
+            # Cek jika klasifikasi ada dan tidak kosong, jika tidak, berikan default
+            data = json.loads(json_string)
+            if 'klasifikasi' in data and not data['klasifikasi']:
+                data['klasifikasi'] = "Tidak Diketahui"
+            
+            return data
         except (ValueError, json.JSONDecodeError, AttributeError) as e:
             logger.error(f"Gagal parsing JSON: {e}. Respon mentah: {response_content}")
             return {"error": "Gagal memahami respons dari AI."}
