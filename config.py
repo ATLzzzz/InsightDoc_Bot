@@ -19,7 +19,8 @@ try:
 except (TypeError, ValueError):
     raise EnvironmentError("PENTING: Harap atur ADMIN_ID dalam file .env dengan nilai integer yang valid.")
 
-MAX_CHUNK_SIZE = 12000 # Ukuran chunk untuk dianalisis oleh AI
+# DIUBAH: Mengurangi ukuran chunk untuk meningkatkan keandalan AI
+MAX_CHUNK_SIZE = 7000
 
 # --- DATA & LABELS ---
 USER_DATA_FILE = "user_data.json"

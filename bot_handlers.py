@@ -25,7 +25,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = InlineKeyboardMarkup(keyboard)
     welcome_message = f"Halo, {user}! 👋\n\nSilakan pilih jenis dokumen yang ingin Anda proses."
     
-    # Edit pesan jika berasal dari callback query, atau kirim baru jika dari /start
     if update.callback_query:
         await update.callback_query.message.edit_text(welcome_message, reply_markup=reply_markup)
     else:
@@ -61,7 +60,7 @@ async def handle_button_press(update: Update, context: ContextTypes.DEFAULT_TYPE
         await query.edit_message_text(text="Mode *Dokumen DMT* dipilih.\n\nSilakan kirimkan dokumen Anda.", parse_mode=ParseMode.MARKDOWN)
     elif data == 'mode_umum':
         context.user_data['mode'] = 'Umum'
-        await query.edit_message_text(text="Mode *Dokumen Umum* dipilih.\n\nSilakan kirimkan dokumen Anda.", parse_mode=ParseMode.MARKDOWN)
+        await query.edit_message_text(text="Mode *Dokumen Umum* dipilih.\n\nSekarang, silakan kirimkan dokumen Anda.", parse_mode=ParseMode.MARKDOWN)
     elif data == 'show_help':
         await help_command(update, context)
     elif data == 'back_to_menu':
@@ -109,18 +108,26 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     f"❌ Error pada bagian {i+1}:\n`{ai_result['error']}`",
                     parse_mode=ParseMode.MARKDOWN
                 )
-                return
+                # Jangan hentikan proses, gunakan teks asli sebagai fallback
+                corrected_chunks.append(chunk)
+                continue
 
-            corrected_chunks.append(ai_result.get("koreksi_teks", chunk))
+            # ---- PERBAIKAN UTAMA ADA DI SINI ----
+            corrected_text = ai_result.get("koreksi_teks")
+            # Jika teks koreksi kosong atau hanya spasi, gunakan teks asli (chunk)
+            if not corrected_text or not corrected_text.strip():
+                corrected_chunks.append(chunk)
+            else:
+                corrected_chunks.append(corrected_text)
+            # ------------------------------------
+
             if is_first:
                 final_classification = ai_result.get("klasifikasi", "Tidak Diketahui")
 
         full_corrected_text = "".join(corrected_chunks)
 
-        # ---- FITUR BARU: Buat dan Kirim Laporan Perubahan ----
         diff_report = generate_diff_report(original_text, full_corrected_text)
         await update.message.reply_text(diff_report, parse_mode=ParseMode.MARKDOWN)
-        # ----------------------------------------------------
 
         result_message = (
             f"🎉 *Analisis Selesai!*\n\n"
