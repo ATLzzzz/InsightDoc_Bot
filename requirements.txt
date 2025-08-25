@@ -1,4 +1,11 @@
+<<<<<<< HEAD
 python-telegram-bot
 PyMuPDF
 python-docx
 requests
+=======
+python-telegram-bot
+PyMuPDF
+python-docx
+requests
+>>>>>>> 4d3658cfa924fc51dde2eb9c6b1a60c506160a54
