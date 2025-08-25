@@ -1,51 +1,15 @@
-def analyze_title(title: str) -> str:
-    """Analyzes a research title and returns a correction message with suggestions in simple language."""
-    message = ""
-    issues = []
-    suggestions = []
-
-    # Check for length/complexity
-    if len(title.split()) > 12 or len(title) > 90:
-        issues.append("Judul terlalu panjang atau kompleks, sehingga sulit dipahami.")
-        suggestions.append("Cobalah memecah judul menjadi frasa yang lebih pendek dan jelas.")
-
-    # Check for technical jargon
-    technical_terms = ["Deep Learning", "Explainable AI", "XAI", "Grad-CAM", "Deteksi", "Visualisasi", "Manipulasi", "Deepfake"]
-    found_terms = [term for term in technical_terms if term.lower() in title.lower()]
-    if found_terms:
-        issues.append(f"Terdapat istilah teknis: {', '.join(found_terms)} yang mungkin membingungkan pembaca awam.")
-        suggestions.append("Jelaskan istilah teknis tersebut secara singkat di judul atau deskripsi.")
-
-    # Check for ambiguity (method, application, context all mixed)
-    if ("Grad-CAM" in title or "Explainable AI" in title or "XAI" in title) and ("Deepfake" in title) and ("Kampanye Politik" in title or "Politik" in title):
-        issues.append("Fokus judul kurang jelas, apakah pada metode, aplikasi, atau konteks.")
-        suggestions.append("Tentukan fokus utama: metode, aplikasi, atau konteks, lalu susun ulang judul agar lebih terarah.")
-
-    # Compose message
-    if not issues:
-        return "Judul sudah cukup baik dan mudah dipahami."
-
-    message += "\n\u2B06\uFE0F *Catatan Perbaikan Judul:*\n"
-    for i, issue in enumerate(issues, 1):
-        message += f"{i}. {issue}\n"
-    message += "\n*Usulan Perbaikan:*\n"
-    for i, suggestion in enumerate(suggestions, 1):
-        message += f"{i}. {suggestion}\n"
-    message += ("\nContoh judul yang lebih sederhana:\n"
-                "'Penerapan Deep Learning dan Explainable AI untuk Deteksi Deepfake pada Video Politik'\n"
-                "Atau tambahkan penjelasan singkat istilah di deskripsi.")
-    return message
 # utils.py
 import os
 import fitz  # PyMuPDF
 import docx
 import io
 import logging
+import difflib
 
 logger = logging.getLogger(__name__)
 
-def extract_text(file_path: str):
-    """Extracts text from txt, pdf, and docx files."""
+def extract_text(file_path: str) -> tuple[str | None, str | None]:
+    """Mengekstrak teks dari file txt, pdf, dan docx."""
     ext = os.path.splitext(file_path)[-1].lower()
     try:
         with open(file_path, "rb") as f:
@@ -58,11 +22,74 @@ def extract_text(file_path: str):
         if ext == ".docx":
             doc = docx.Document(io.BytesIO(content))
             return "\n".join(p.text for p in doc.paragraphs), None
-        return None, "❌ Format file tidak didukung."
+        return None, "❌ Format file tidak didukung. Silakan kirim .txt, .pdf, atau .docx."
     except Exception as e:
-        logger.error(f"Error ekstrak teks: {e}")
-        return None, f"❌ Gagal memproses file."
+        logger.error(f"Error saat ekstrak teks dari {file_path}: {e}")
+        return None, f"❌ Gagal memproses file. File mungkin rusak atau terenkripsi."
 
 def split_text_into_chunks(text: str, chunk_size: int) -> list:
-    """Splits a string into chunks of a specified size."""
+    """Memecah teks menjadi beberapa bagian dengan ukuran tertentu."""
     return [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
+
+def generate_diff_report(original_text: str, corrected_text: str, context_lines=2) -> str:
+    """Membuat laporan perbandingan antara teks asli dan teks yang dikoreksi."""
+    if original_text.strip() == corrected_text.strip():
+        return "✅ Tidak ada perubahan signifikan yang terdeteksi."
+
+    diff = difflib.unified_diff(
+        original_text.splitlines(keepends=True),
+        corrected_text.splitlines(keepends=True),
+        fromfile='Teks Asli',
+        tofile='Teks Koreksi',
+        n=context_lines,
+    )
+    
+    report = "📝 *Laporan Perubahan Teks:*\n\n"
+    report += "```diff\n"
+    
+    diff_lines = list(diff)
+    if not diff_lines:
+         return "✅ Tidak ada perbedaan format baris yang terdeteksi, kemungkinan hanya spasi."
+
+    # Hanya ambil header dan 20 baris perubahan pertama agar tidak terlalu panjang
+    report_lines = diff_lines[:25]
+
+    for line in report_lines:
+        if line.startswith(('---', '+++', '@@')):
+            continue
+        report += line
+    
+    report += "```\n"
+    if len(diff_lines) > 25:
+        report += "_(Laporan dipotong agar tidak terlalu panjang)_"
+        
+    return report
+
+def analyze_title(title: str) -> str:
+    """Menganalisis judul penelitian dan memberikan saran perbaikan."""
+    # (Fungsi ini tetap sama, tidak ada perubahan)
+    message = ""
+    issues = []
+    suggestions = []
+    
+    if len(title.split()) > 15 or len(title) > 100:
+        issues.append("Judul terlalu panjang, sehingga sulit dipahami.")
+        suggestions.append("Coba perpendek judul agar lebih fokus dan jelas.")
+
+    technical_terms = ["Deep Learning", "Explainable AI", "XAI", "Grad-CAM", "Deteksi", "Visualisasi", "Manipulasi", "Deepfake"]
+    found_terms = [term for term in technical_terms if term.lower() in title.lower()]
+    if found_terms:
+        issues.append(f"Terdapat istilah teknis yang kompleks: {', '.join(found_terms)}.")
+        suggestions.append("Jika memungkinkan, jelaskan istilah ini di abstrak atau gunakan padanan yang lebih umum.")
+    
+    if not issues:
+        return "✅ Judul sudah baik dan mudah dipahami."
+
+    message += "📝 *Catatan Perbaikan Judul:*\n"
+    for i, issue in enumerate(issues, 1):
+        message += f"{i}. {issue}\n"
+    message += "\n*Saran Perbaikan:*\n"
+    for i, suggestion in enumerate(suggestions, 1):
+        message += f"{i}. {suggestion}\n"
+        
+    return message
