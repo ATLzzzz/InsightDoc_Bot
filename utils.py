@@ -6,6 +6,7 @@ import io
 import logging
 import difflib
 from spellchecker import SpellChecker
+from config import MAX_CHUNK_SIZE
 
 logger = logging.getLogger(__name__)
 
@@ -28,9 +29,26 @@ def extract_text(file_path: str) -> tuple[str | None, str | None]:
         logger.error(f"Error saat ekstrak teks dari {file_path}: {e}")
         return None, f"❌ Gagal memproses file. File mungkin rusak atau terenkripsi."
 
-def split_text_into_chunks(text: str, chunk_size: int) -> list:
-    """Memecah teks menjadi beberapa bagian dengan ukuran tertentu."""
-    return [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
+def split_text_into_logical_chunks(text: str, max_chunk_size: int = MAX_CHUNK_SIZE) -> list:
+    """Memecah teks menjadi beberapa bagian dengan ukuran tertentu, secara cerdas berdasarkan paragraf."""
+    paragraphs = text.split('\n\n')
+    chunks = []
+    current_chunk = ""
+    for paragraph in paragraphs:
+        if len(current_chunk) + len(paragraph) + 2 <= max_chunk_size:
+            current_chunk += paragraph + "\n\n"
+        else:
+            if current_chunk:
+                chunks.append(current_chunk.strip())
+            current_chunk = paragraph + "\n\n"
+    if current_chunk:
+        chunks.append(current_chunk.strip())
+    return chunks
+
+# Fungsi lama yang diganti
+# def split_text_into_chunks(text: str, chunk_size: int) -> list:
+#     """Memecah teks menjadi beberapa bagian dengan ukuran tertentu."""
+#     return [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
 
 def generate_diff_report(original_text: str, corrected_text: str) -> str:
     """Membuat laporan perbandingan antara teks asli dan teks yang dikoreksi."""

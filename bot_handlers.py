@@ -6,7 +6,7 @@ from telegram.ext import ContextTypes
 from telegram.constants import ParseMode
 
 from config import ADMIN_ID, MAX_CHUNK_SIZE
-from utils import extract_text, split_text_into_chunks, generate_diff_report, final_spell_check
+from utils import extract_text, split_text_into_logical_chunks, generate_diff_report, final_spell_check
 from ai_service import correct_and_classify_text, analyze_title_with_llm
 from user_manager import load_user_data, track_user
 
@@ -74,7 +74,7 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await processing_message.edit_text(error)
             return
         
-        chunks = split_text_into_chunks(original_text, MAX_CHUNK_SIZE)
+        chunks = split_text_into_logical_chunks(original_text, MAX_CHUNK_SIZE)
         corrected = []
         classification = "Tidak Diketahui"
         for i, chunk in enumerate(chunks):

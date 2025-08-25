@@ -59,6 +59,45 @@ Teks di dalam "koreksi_teks" harus menjadi versi final yang sudah sempurna tanpa
         logger.error(f"Error tidak terduga di fungsi AI: {e}")
         return {"error": f"Terjadi kesalahan internal pada sistem AI."}
 
+def analyze_title_for_dmt(title: str) -> str:
+    """Menganalisis judul penelitian secara spesifik untuk mode DMT (Dewan Musyawarah Taruna)."""
+    dmt_commissions = ["KOMISI I", "KOMISI II", "KOMISI III", "KOMISI IV"]
+
+    system_prompt = f"""
+Anda adalah seorang **Dosen Pembimbing Akademik dan Panitia Dewan Musyawarah Taruna (DMT)** yang sangat berpengalaman. Tugas Anda adalah memberikan analisis tajam dan konstruktif terhadap judul penelitian berikut, dengan fokus khusus pada relevansinya dengan **empat komisi utama DMT**.
+
+**Judul yang akan dianalisis:** "{title}"
+
+**Analisis Anda harus mencakup poin-poin berikut:**
+1.  **Relevansi dengan Komisi DMT**: Kelompokkan dan diskusikan relevansi judul ini secara terperinci dengan salah satu dari empat komisi berikut: {', '.join(dmt_commissions)}. Jika judul relevan dengan lebih dari satu komisi, jelaskan setiap relevansinya. Jika tidak relevan, nyatakan demikian.
+2.  **Fokus Penelitian dan Jangkauan**: Apakah fokus utama (metode, objek, atau tujuan) sudah tergambar dengan jelas? Apakah cakupannya terlalu luas atau terlalu sempit untuk konteks DMT?
+3.  **Saran Perbaikan Berbasis Komisi**: Berikan 1-2 alternatif atau contoh judul yang lebih baik, spesifik, dan lebih terarah pada salah satu komisi yang relevan.
+
+**Format Output:**
+Berikan jawaban dalam format Markdown yang rapi. Gunakan poin-poin dan buatlah agar mudah dibaca. Berikan langsung sebagai teks biasa tanpa format JSON.
+"""
+    
+    try:
+        response = requests.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"},
+            json={
+                "model": GROQ_MODEL,
+                "messages": [{"role": "system", "content": system_prompt}],
+                "temperature": 0.3,
+            },
+            timeout=120
+        )
+        response.raise_for_status()
+        feedback = response.json()["choices"][0]["message"]["content"]
+        return feedback
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error request ke Groq API saat analisis judul: {e}")
+        return f"❌ Gagal terhubung ke layanan AI: {e}"
+    except Exception as e:
+        logger.error(f"Error tidak terduga di fungsi analisis judul: {e}")
+        return f"❌ Terjadi kesalahan internal pada sistem AI."
+
 def analyze_title_with_llm(title: str) -> str:
     """Menganalisis judul penelitian menggunakan LLM untuk memberikan feedback mendalam."""
     system_prompt = f"""
