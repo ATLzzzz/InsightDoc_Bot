@@ -3,7 +3,6 @@ import os
 import json
 from datetime import datetime
 from filelock import FileLock
-
 from config import USER_DATA_FILE
 
 def load_user_data():
@@ -14,7 +13,7 @@ def load_user_data():
         try:
             return json.load(f)
         except json.JSONDecodeError:
-            return {} # Kembalikan dict kosong jika file rusak
+            return {}
 
 def save_user_data(data):
     """Menyimpan data pengguna ke file JSON."""
@@ -22,15 +21,12 @@ def save_user_data(data):
         json.dump(data, f, indent=4)
 
 def track_user(user, mode: str):
-    """Melacak aktivitas pengguna dengan file locking untuk mencegah race conditions."""
-    lock_path = f"{USER_DATA_FILE}.lock"
-    lock = FileLock(lock_path, timeout=10)
-
+    """Melacak aktivitas pengguna dengan file locking."""
+    lock = FileLock(f"{USER_DATA_FILE}.lock", timeout=10)
     with lock:
         users = load_user_data()
         user_id = str(user.id)
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
         if user_id in users:
             users[user_id]['usage_count'] += 1
             users[user_id]['last_used'] = now

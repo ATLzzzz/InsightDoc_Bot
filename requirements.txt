@@ -6,5 +6,5 @@ python-telegram-bot
 PyMuPDF
 python-docx
 requests
-dotenv
+python-dotenv
 pyspellchecker

@@ -2,11 +2,9 @@
 import logging
 from telegram.ext import (ApplicationBuilder, CommandHandler, MessageHandler, filters, CallbackQueryHandler)
 
-# Import config dan handlers
 from config import TELEGRAM_TOKEN
 from bot_handlers import (start, help_command, show_users, handle_button_press, handle_document, unknown_text, check_title)
 
-# --- LOGGING SETUP ---
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
@@ -17,7 +15,6 @@ def main():
     """Memulai dan menjalankan bot Telegram."""
     application = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 
-    # --- REGISTER HANDLERS ---
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("users", show_users))
